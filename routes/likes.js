@@ -20,6 +20,8 @@ const pageTotalLikes = new Schema({
 const likeMongo = mongoose.model('articleslikes', articlikes)
 const likesTotal = mongoose.model('pageslikes', pageTotalLikes)
 
+router.get('/setcookie', checkCookie)
+
 
 router.get('/total', async (req, res, next) => {
 
@@ -33,7 +35,7 @@ router.get('/total', async (req, res, next) => {
         }
     })
 })
-router.get('/like', async (req, res, next) => {
+router.get('/like', checkCookie,async (req, res, next) => {
     const query = { pageId: req.query.article }
     likesTotal.findOne(query, (err, doc) => {
         if (doc == null) {
@@ -48,7 +50,7 @@ router.get('/like', async (req, res, next) => {
     })
     updateUserActivity(req.cookies.kblg_usr, query.pageId, 'true')
 })
-router.get('/dislike', async (req, res, next) => {
+router.get('/dislike', checkCookie,async (req, res, next) => {
     const query = { pageId: req.query.article }
     likesTotal.findOne(query, (err, doc) => {
         if (doc == null) {
@@ -111,19 +113,20 @@ function updateUserActivity(user, articlePath, action) {
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+function checkCookie(req, res, next) {
+    let expiration = new Date()
+    expiration.setDate(expiration.getDate() + 365 * 3)
+    let id = uuidv4()
+    if (req.cookies.kblg_usr == null) {
+        res.cookie(`kblg_usr`, id, {
+            expires: expiration,
+            secure: true,
+            // httpOnly: true,
+            sameSite: 'lax'
+        });
+    }
+    next()
+}
 
 
 
